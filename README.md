@@ -25,8 +25,8 @@ print(type(opt.txt_path))
 ```python
 video_path = Path('./test.mp4')
 video_reader = rutils.video.VideoReader(in_video_path=video_path)
-print(video_reader.num_frame)
-for _ in range(num_frame):
+print(video_reader.num_frames)
+for _ in range(num_frames):
     frame = video_reader.get_next_frame()
 ```
 

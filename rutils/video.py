@@ -7,6 +7,7 @@ import pymediainfo
 
 class VideoReader(object):
     def __init__(self, in_video_path: Path = None):
+        in_video_path = Path(in_video_path).resolve()
         self.video_path = in_video_path
         self._video = None
         self.fps = None
@@ -15,28 +16,29 @@ class VideoReader(object):
         self.fps_mode = None
         self.video_bitrate = None
         self.encode_format = None
-        self.num_frame = None
+        self.num_frames = None
         self.frame_id = None
 
         if in_video_path:
-            self.load(in_video_path)
+            self.load(self.video_path)
 
-    def load(self, in_video_path):
+    def load(self, in_video_path: Path):
+        in_video_path = Path(in_video_path).resolve()
         self.release()
         self.video_path = in_video_path
-        if not Path(in_video_path).exists():
-            raise IOError(
-                'There is no {}, please check again'.format(in_video_path))
-        self._video = cv2.VideoCapture(in_video_path)
+        if not in_video_path.exists():
+            raise IOError('There is no {}, please check again'.format(
+                in_video_path.as_posix()))
+        self._video = cv2.VideoCapture(in_video_path.as_posix())
 
         self.fps = self._video.get(cv2.CAP_PROP_FPS)
         self.w = int(self._video.get(3))
         self.h = int(self._video.get(4))
-        self.num_frame = int(self._video.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.num_frames = int(self._video.get(cv2.CAP_PROP_FRAME_COUNT))
 
     def parse_mediainfo(self):
         # TODO: pymediainfo has multi threading bug, cannot use in multi threading!
-        video_info = pymediainfo.MediaInfo.parse(self.video_path)
+        video_info = pymediainfo.MediaInfo.parse(self.video_path.as_posix())
         for track in video_info.tracks:
             if track.track_type == 'Video':
                 self.fps_mode = track.frame_rate_mode
@@ -66,7 +68,7 @@ class VideoWriter(object):
         object {[type]} -- [description]
     """
     def __init__(self,
-                 out_path,
+                 out_path: Path,
                  video_w,
                  video_h,
                  fps=25,
@@ -77,8 +79,11 @@ class VideoWriter(object):
         self._w = video_w
         self._h = video_h
         self._fps = fps
+
+        out_path = Path(out_path).resolve()
+        out_path.parent.mkdir(parents=True, exist_ok=True)
         if mode == 'opencv':
-            self._video = cv2.VideoWriter(out_path,
+            self._video = cv2.VideoWriter(out_path.as_posix(),
                                           cv2.VideoWriter_fourcc(*encoding),
                                           self._fps, (self._w, self._h))
         else:
@@ -86,7 +91,7 @@ class VideoWriter(object):
                 'ffmpeg -loglevel warning -y -f image2pipe -vcodec png -r {fps} -i - -vcodec h264 -profile:v high -level:v 5 -refs 6 -q:v 0 -r {fps} -b:v {bitrate} -pix_fmt yuv420p {out_path}'
                 .format(fps=self._fps,
                         bitrate=video_bitrate,
-                        out_path=out_path),
+                        out_path=out_path.as_posix()),
                 stdin=subprocess.PIPE,
                 shell=True)
 

@@ -1,4 +1,12 @@
-# v0.1
+# v0.1.1
+
+## Fix
+
+- Fix video.VideoReader get `pathlib.Path` error
+
+---
+
+# v0.1.0
 
 ## Add
 
@@ -11,7 +19,7 @@
 
 ---
 
-# v0.0
+# v0.0.0
 
 ## Add
 
