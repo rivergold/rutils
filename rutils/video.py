@@ -1,10 +1,10 @@
-from typing import Union
+from typing import List, Union
 import subprocess, math
 from pathlib import Path
 import cv2
 from PIL import Image
 import pymediainfo
-from .common import run_command
+from .common import run_command, get_current_strtime
 
 
 class VideoReader(object):
@@ -139,15 +139,29 @@ class FrameReader(object):
 #     ])
 #     return start_end_frame_ids
 
-# def concat_video(video_paths, tmp_dir, out_video_path):
-#     concat_txt = Path(tmp_dir) / '{}.txt'.format(get_current_strtime())
-#     with concat_txt.open('w', encoding='utf-8') as f:
-#         for video_path in video_paths:
-#             f.write('file {}\n'.format(video_path))
-#     command = 'ffmpeg -loglevel warning -y -f concat -safe 0 -i {} -c copy {}'.format(
-#         concat_txt.as_posix(), out_video_path)
-#     run_command(command)
-#     concat_txt.unlink()
+
+def concat_videos(video_paths: List[Union[str, Path]],
+                  out_video_path: Union[str, Path]) -> Path:
+    """Concat videos
+
+    Args:
+        video_paths (List[Union[str, Path]]): video paths
+        out_video_path (Union[str, Path]):
+
+    Returns:
+        Path: Output video path
+    """
+    video_paths = [Path(video_path) for video_path in video_paths]
+    out_video_path = Path(out_video_path)
+    tmp_dir = video_paths[0].parent
+    concat_txt = tmp_dir / f'{get_current_strtime()}.txt'
+    with concat_txt.open('w', encoding='utf-8') as f:
+        for video_path in video_paths:
+            f.write(f'file {video_path.as_posix()}\n')
+    command = f'ffmpeg -loglevel warning -y -f concat -safe 0 -i {concat_txt.as_posix()} -c copy {out_video_path.as_posix()}'
+    run_command(command)
+    concat_txt.unlink()
+    return out_video_path
 
 
 def extract_audio_from_video(video_path: Union[str, Path],
