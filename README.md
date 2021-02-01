@@ -18,6 +18,15 @@ opt = opt_parser.parse_args()
 print(type(opt.txt_path))
 ```
 
+#### Run command
+
+```python
+from rutils.common import run_command
+
+command = 'echo "Run command example"'
+run_command(command)
+```
+
 ### Video
 
 #### Read video
