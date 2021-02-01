@@ -8,10 +8,10 @@ with readme_path.open('r', encoding='utf-8') as f:
     long_description = f.read()
 
 setup(name='rutils',
-      version='0.1.1',
+      version='0.2.0',
       packages=find_packages(),
       description='Utils for Computer Vision',
-      install_requires=['pillow', 'pymediainfo'],
+      install_requires=['pillow', 'pymediainfo', 'rlogger'],
       long_description=long_description,
       long_description_content_type='text/markdown',
       author='rivergold',
