@@ -11,8 +11,9 @@ def str2path(in_str):
         raise TypeError('Need input str type')
 
 
-def run_command(command):
-    RLogger.log('Run command: {}'.format(command))
+def run_command(command, enable_log=False):
+    if enable_log:
+        RLogger.log('Run command: {}'.format(command))
     try:
         subprocess.check_call(command, shell=True, executable='/bin/bash')
     except Exception as e:
