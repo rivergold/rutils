@@ -2,6 +2,9 @@
 
 Utils for computer vision
 
+## Install
+
+pip install rutils
 ## Modules
 
 ### Common

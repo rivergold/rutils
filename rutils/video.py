@@ -1,8 +1,10 @@
+from typing import List, Union
 import subprocess, math
 from pathlib import Path
 import cv2
 from PIL import Image
 import pymediainfo
+from .common import run_command, get_current_strtime
 
 
 class VideoReader(object):
@@ -137,12 +139,94 @@ class FrameReader(object):
 #     ])
 #     return start_end_frame_ids
 
-# def concat_video(video_paths, tmp_dir, out_video_path):
-#     concat_txt = Path(tmp_dir) / '{}.txt'.format(get_current_strtime())
-#     with concat_txt.open('w', encoding='utf-8') as f:
-#         for video_path in video_paths:
-#             f.write('file {}\n'.format(video_path))
-#     command = 'ffmpeg -loglevel warning -y -f concat -safe 0 -i {} -c copy {}'.format(
-#         concat_txt.as_posix(), out_video_path)
-#     run_command(command)
-#     concat_txt.unlink()
+
+def concat_videos(video_paths: List[Union[str, Path]],
+                  out_video_path: Union[str, Path]) -> Path:
+    """Concat videos
+
+    Args:
+        video_paths (List[Union[str, Path]]): video paths
+        out_video_path (Union[str, Path]):
+
+    Returns:
+        Path: Output video path
+    """
+    video_paths = [Path(video_path) for video_path in video_paths]
+    out_video_path = Path(out_video_path)
+    tmp_dir = video_paths[0].parent
+    concat_txt = tmp_dir / f'{get_current_strtime()}.txt'
+    with concat_txt.open('w', encoding='utf-8') as f:
+        for video_path in video_paths:
+            f.write(f'file {video_path.as_posix()}\n')
+    command = f'ffmpeg -loglevel warning -y -f concat -safe 0 -i {concat_txt.as_posix()} -c copy {out_video_path.as_posix()}'
+    run_command(command)
+    concat_txt.unlink()
+    return out_video_path
+
+
+def extract_audio_from_video(video_path: Union[str, Path],
+                             out_audio_path: Union[str, Path]) -> Path:
+    """Extract video's audio
+
+    Args:
+        video_path (Union[str, Path])
+        out_audio_path (Union[str, Path])
+
+    Returns:
+        Path: Output audio path
+    """
+    video_path = Path(video_path)
+    out_audio_path = Path(out_audio_path)
+
+    command = 'ffmpeg -loglevel warning -y -i "{}" {}'.format(
+        video_path.as_posix(),
+        out_audio_path.as_posix(),
+    )
+    run_command(command)
+    return out_audio_path
+
+
+def add_audio_to_video(audio_path: Union[str, Path],
+                       video_path: Union[str, Path],
+                       out_video_path: [str, Path]) -> Path:
+    """Add audio into video
+
+    Args:
+        audio_path (Union[str, Path]):
+        video_path (Union[str, Path]):
+        out_video_path ([type]):
+
+    Returns:
+        Path: Output video path
+    """
+    command = 'ffmpeg -loglevel warning -y -i "{}" -i "{}" -c:v copy -c:a copy -shortest {}'.format(
+        video_path.as_posix(),
+        audio_path.as_posix(),
+        out_video_path.as_posix(),
+    )
+    run_command(command)
+    return out_video_path
+
+
+def copy_audio_from_another_video(no_audio_video_path: Union[str, Path],
+                                  with_audio_video_path: [str, Path],
+                                  out_video_path: [str, Path]) -> Path:
+    """Copy another video's audio into current video
+
+    Args:
+        no_audio_video_path (Union[str, Path])
+        with_audio_video_path ([type])
+        out_video_path ([type])
+
+    Returns:
+        Path: Output video path
+    """
+    no_audio_video_path = Path(no_audio_video_path)
+    with_audio_video_path = Path(with_audio_video_path)
+    out_video_path = Path(out_video_path)
+
+    command = 'ffmpeg -loglevel warning -y -i {} -i {} -c copy -map 0:0 -map 1:1 -shortest {}'.format(
+        no_audio_video_path.as_posix(), with_audio_video_path.as_posix(),
+        out_video_path.as_posix())
+    run_command(command)
+    return out_video_path
